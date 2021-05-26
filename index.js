@@ -1,16 +1,21 @@
 /**
- * 
+ *
  * @param {pipeline} String path to pipeline JSON file
- * @optional @param {options} String path to options JSON file
- * 
+ * @param {options} String path to options JSON file
+ *
  */
 
 module.exports.test = async function (pipeline, options, pwd) {
   const { forEachSeries } = require("p-iteration");
-  const { appendFileSync, readFileSync, writeFileSync } = require("fs");
+  const {
+    appendFileSync,
+    mkdirSync,
+    writeFileSync,
+    existsSync,
+  } = require("fs");
   const axios = require("axios");
   const { resolve } = require("path");
-  
+
   const replacer = async (value) => {
     if (typeof value === "string") {
       if (value.includes("$global")) {
@@ -57,33 +62,31 @@ module.exports.test = async function (pipeline, options, pwd) {
     while (currentDate - date < milliseconds);
   };
 
-  let opt = {};
   let logPath = "";
   let resultPath = "";
 
   try {
-    const json = readFileSync(options ?? "./options.json");
-    opt = JSON.parse(json);
+    const dir = `${pwd}/${options.path}`;
+    if (!existsSync(dir)) mkdirSync(dir);
+
+    const title = new Date().toISOString().split(".")[0];
+
     logPath = `${
-      opt.name_mode === "BY_DATE"
-        ? `${opt.path ?? `${pwd}/`}${new Date()}.log`
-        : opt.name_mode === "DEFAULT"
-        ? `${opt.path ?? `${pwd}/`}result.log`
-        : opt.name
-        ? `${opt.path ?? `${pwd}/`}${opt.name}.log`
-        : `${opt.path ?? `${pwd}/`}result.log`
+      options.name_mode === "BY_DATE"
+        ? `${dir}${title}.log`
+        : options.name_mode === "CUSTOM" && options.name
+        ? `${dir}${options.name}.log`
+        : `${dir}result.log`
     }`;
     resultPath = `${
-      opt.name_mode === "BY_DATE"
-        ? `${opt.path ?? `${pwd}/`}${new Date()}.json`
-        : opt.name_mode === "DEFAULT"
-        ? `${opt.path ?? `${pwd}/`}result.json`
-        : opt.name
-        ? `${opt.path ?? `${pwd}/`}${opt.name}.json`
-        : `${opt.path ?? `${pwd}/`}result.json`
+      options.name_mode === "BY_DATE"
+        ? `${dir}${title}.json`
+        : options.name_mode === "CUSTOM" && options.name
+        ? `${dir}${options.name}.json`
+        : `${dir}result.json`
     }`;
   } catch (error) {
-    console.warn("Error on get options JSON");
+    console.warn("Error on get options JSON", error);
     return;
   }
 
@@ -91,17 +94,6 @@ module.exports.test = async function (pipeline, options, pwd) {
     const newStr = `\n\n${new Date()} - ${str}`;
     appendFileSync(logPath, newStr);
   };
-
-  let pipe = [];
-  try {
-    log("Getting JSON...");
-    const json = readFileSync(pipeline ?? "./pipeline.json");
-    pipe = JSON.parse(json);
-    log("JSON getted...");
-  } catch (error) {
-    log("Error on get pipeline JSON");
-    return;
-  }
 
   const stagesResults = {
     SUCCESS: "SUCCESS",
@@ -172,7 +164,9 @@ module.exports.test = async function (pipeline, options, pwd) {
           };
           if (model === "delete" || model === "get") {
             log(
-              `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${config}`
+              `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
+                config
+              )}`
             );
             try {
               response = await axios[request.type.toLowerCase()](url, config);
@@ -240,10 +234,10 @@ module.exports.test = async function (pipeline, options, pwd) {
     stagesReturn.push(stageInfo);
   };
 
-  await forEachSeries(pipe, async (stage, index) => {
+  await forEachSeries(pipeline, async (stage, index) => {
     if (!stopFlag) {
       await runStage(stage, index);
-      sleep(opt.delay);
+      sleep(options.delay);
     }
   });
 
