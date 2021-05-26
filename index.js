@@ -129,13 +129,13 @@ module.exports.test = async function (pipeline, options, pwd) {
   let global = {};
 
   const runStage = async (stage, index) => {
-    const { type, request, result, funcs, variables } = stage;
-    log(`Starting stage ${index + 1} --> ${type}`);
-    console.info(`Starting stage ${index + 1} --> ${type}`);
+    const { type, request, result, funcs, variables, description } = stage;
+    log(`Starting stage ${index + 1} --> ${type} ${description ? `--> ${description}` : ''}`);
+    console.info(`Starting stage ${index + 1} --> ${type} ${description ? `--> ${description}` : ''}`);
     const stageInfo = {
       stage: index + 1,
       type,
-      meta: { type, request, result, funcs, variables },
+      meta: { type, request, result, funcs, variables, description },
       result: null,
     };
 
