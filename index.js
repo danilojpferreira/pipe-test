@@ -179,8 +179,8 @@ const t = async (pipeline, options, pwd) => {
             response = await axios[request.type.toLowerCase()](url, config);
           } catch (error) {
             response = {
-              status = error.response.status,
-              config = error.config
+              status: error.response.status,
+              config: error.config
             }
           }
         } else {
@@ -207,8 +207,8 @@ const t = async (pipeline, options, pwd) => {
             );
           } catch (error) {
             response = {
-              status = error.response.status,
-              config = error.config
+              status: error.response.status,
+              config: error.config
             }
           }
         }
