@@ -128,11 +128,6 @@ const t = async (pipeline, options, pwd) => {
     }
   };
 
-  const dealWithFunctionError = (error, response) => {
-    log(`Error:\n${stringify(response)}\n${stringify(error)}`);
-    return setStageResult(stagesResults.FAIL);
-  };
-
   const stagesReturn = [];
   let global = {};
 
@@ -183,7 +178,10 @@ const t = async (pipeline, options, pwd) => {
           try {
             response = await axios[request.type.toLowerCase()](url, config);
           } catch (error) {
-            stageInfo.result = dealWithFunctionError(error, response);
+            response = {
+              status = error.response.status,
+              config = error.config
+            }
           }
         } else {
           const data = {};
@@ -191,7 +189,6 @@ const t = async (pipeline, options, pwd) => {
             const keys = Object.keys(request.data);
             if (keys.length) {
               await forEachSeries(keys, async (key) => {
-                console.log(key);
                 data[key] = await replacer(request.data[key]);
               });
             }
@@ -209,9 +206,13 @@ const t = async (pipeline, options, pwd) => {
               config
             );
           } catch (error) {
-            stageInfo.result = dealWithFunctionError(error, response);
+            response = {
+              status = error.response.status,
+              config = error.config
+            }
           }
         }
+
         const responseStatus = response?.status ?? 0;
         if (
           result.allow.includes(responseStatus) ||
@@ -230,7 +231,10 @@ const t = async (pipeline, options, pwd) => {
           result.deny.includes(responseStatus) ||
           result.deny.includes("*")
         ) {
-          log(`Return failed:\t${stringify(response)}`);
+          log(`Return failed:\t${stringify({
+            status: response.status,
+            config: response.config,
+          })}`);
           stageInfo.result = setStageResult(stagesResults.FAIL);
         } else stageInfo.result = setStageResult(stagesResults.UNDEFINED);
 
