@@ -5,7 +5,12 @@
  *
  */
 
-module.exports.test = async function (pipeline, options, pwd) {
+const t = async (pipeline, options, pwd) => {
+  if (!Array.isArray(pipeline) || !pipeline?.length) {
+    console.log('pipeline should be a valid json, with at least 1 array element');
+    return null;
+  }
+
   const { forEachSeries } = require("p-iteration");
   const {
     appendFileSync,
@@ -27,7 +32,7 @@ module.exports.test = async function (pipeline, options, pwd) {
         return newValue;
       }
       return value;
-    } else if (Array.isArray(value)) {
+    } else if (Array.isArray(value) && value?.length) {
       const arr = [];
       await forEachSeries(value, async (itemOfArray) => {
         const newItemOfArray = await replacer(itemOfArray);
@@ -36,11 +41,14 @@ module.exports.test = async function (pipeline, options, pwd) {
 
       return arr;
     } else if (typeof value === "object") {
+      const keys = Object.keys(value);
       const newValue = {};
-      await forEachSeries(Object.keys(value), async (key) => {
-        const newKey = await replacer(value[key]);
-        newValue[key] = newKey;
-      });
+      if (keys?.length) {
+        await forEachSeries(keys, async (key) => {
+          const newKey = await replacer(value[key]);
+          newValue[key] = newKey;
+        });
+      }
       return newValue;
     }
     return value;
@@ -119,9 +127,7 @@ module.exports.test = async function (pipeline, options, pwd) {
   };
 
   const dealWithFunctionError = (error, response) => {
-    if (error.code === "ECONNREFUSED")
-      log(`Request error:\n${stringify(response)}\n${stringify(error)}`);
-
+    log(`Error:\n${stringify(response)}\n${stringify(error)}`);
     return setStageResult(stagesResults.FAIL);
   };
 
@@ -130,8 +136,16 @@ module.exports.test = async function (pipeline, options, pwd) {
 
   const runStage = async (stage, index) => {
     const { type, request, result, funcs, variables, description } = stage;
-    log(`Starting stage ${index + 1} --> ${type} ${description ? `--> ${description}` : ''}`);
-    console.info(`Starting stage ${index + 1} --> ${type} ${description ? `--> ${description}` : ''}`);
+    log(
+      `Starting stage ${index + 1} --> ${type} ${
+        description ? `--> ${description}` : ""
+      }`
+    );
+    console.info(
+      `Starting stage ${index + 1} --> ${type} ${
+        description ? `--> ${description}` : ""
+      }`
+    );
     const stageInfo = {
       stage: index + 1,
       type,
@@ -141,81 +155,76 @@ module.exports.test = async function (pipeline, options, pwd) {
 
     switch (type) {
       case "SET_GLOBAL":
-        try {
-          log(
-            `Setting global variables.\nprevious state:\t${stringify(
-              global
-            )}\nnext state:\t${stringify(variables)}`
-          );
-          global = variables;
-          stageInfo.result = setStageResult(stagesResults.SUCCESS);
-        } catch (error) {
-          setStageResult(stagesResults.FAIL);
-        }
+        log(
+          `Setting global variables.\nprevious state:\t${stringify(
+            global
+          )}\nnext state:\t${stringify(variables)}`
+        );
+        global = variables;
+        stageInfo.result = setStageResult(stagesResults.SUCCESS);
+
         break;
       case "CRUD":
-        try {
-          let response = null;
-          const model = request.type.toLowerCase();
-          const url = `${global.baseUrl ?? ""}${request.path}`;
-          const config = {
-            ...(global.config ?? null),
-            ...request.config,
-          };
-          if (model === "delete" || model === "get") {
-            log(
-              `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
-                config
-              )}`
-            );
-            try {
-              response = await axios[request.type.toLowerCase()](url, config);
-            } catch (error) {
-              stageInfo.result = dealWithFunctionError(error, response);
-              response = error;
-            }
-          } else {
-            const data = {};
-            if (request?.data?.length) {
-              await forEachSeries(
-                Object.keys(request.data).map((i) => i),
-                async (key) => {
-                  data[key] = await replacer(request.data[key]);
-                }
-              );
-            }
-
-            log(
-              `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
-                config
-              )}\nwith data:\t${stringify(data)}`
-            );
-            try {
-              response = await axios[request.type.toLowerCase()](
-                url,
-                data,
-                config
-              );
-            } catch (error) {
-              stageInfo.result = dealWithFunctionError(error, response);
-              response = error;
-            }
+        let response = null;
+        const model = request.type.toLowerCase();
+        const url = `${global.baseUrl ?? ""}${request.path}`;
+        const config = {
+          ...(global.config ?? null),
+          ...request.config,
+        };
+        if (model === "delete" || model === "get") {
+          log(
+            `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
+              config
+            )}`
+          );
+          try {
+            response = await axios[request.type.toLowerCase()](url, config);
+          } catch (error) {
+            stageInfo.result = dealWithFunctionError(error, response);
           }
-          const responseStatus = response?.status?.toString() || "0";
-          if (
-            result.allow.includes(responseStatus) ||
-            result.allow.includes("*")
-          ) {
-            stageInfo.result = setStageResult(stagesResults.SUCCESS);
-            log(`Return success:\t${stringify(response)}`);
-          } else if (
-            result.deny.includes(responseStatus) ||
-            result.deny.includes("*")
-          ) {
-            stageInfo.result = setStageResult(stagesResults.FAIL);
-            log(`Return failed:\t${stringify(response)}`);
-          } else stageInfo.result = setStageResult(stagesResults.UNDEFINED);
+        } else {
+          const data = {};
+          if (request?.data?.length) {
+            await forEachSeries(
+              Object.keys(request.data).map((i) => i),
+              async (key) => {
+                data[key] = await replacer(request.data[key]);
+              }
+            );
+          }
 
+          log(
+            `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
+              config
+            )}\nwith data:\t${stringify(data)}`
+          );
+          try {
+            response = await axios[request.type.toLowerCase()](
+              url,
+              data,
+              config
+            );
+          } catch (error) {
+            stageInfo.result = dealWithFunctionError(error, response);
+          }
+        }
+        const responseStatus = response?.status ?? 0;
+        if (
+          result.allow.includes(responseStatus) ||
+          result.allow.includes("*")
+        ) {
+          log(`Return success:\t${stringify({status: response.status, headers: response.headers, config: response.config, data: response.data})}`);
+          stageInfo.result = setStageResult(stagesResults.SUCCESS);
+        } else if (
+          result.deny.includes(responseStatus) ||
+          result.deny.includes("*")
+        ) {
+          log(`Return failed:\t${stringify(response)}`);
+          stageInfo.result = setStageResult(stagesResults.FAIL);
+        } else stageInfo.result = setStageResult(stagesResults.UNDEFINED);
+
+        if (funcs?.length) {
           await forEachSeries(funcs, async (func) => {
             try {
               log(`Trying eval function:\t${func}`);
@@ -224,8 +233,6 @@ module.exports.test = async function (pipeline, options, pwd) {
               log(`Error in eval function:\t${func}`);
             }
           });
-        } catch (error) {
-          setStageResult(stagesResults.FAIL);
         }
         break;
       default:
@@ -249,7 +256,9 @@ module.exports.test = async function (pipeline, options, pwd) {
       if (error) log(`Error on write results:\t${stringify(error)}`);
     }
   );
-
+  console.info(`${!stopFlag ? 'PIPELINE FINISHED WITH SUCCESS' : 'PIPELINE FINISHED WITH ERRORS'}`)
   console.info(`Log file writed in ${resolve(logPath)}`);
   console.info(`Result file writed in ${resolve(resultPath)}`);
 };
+
+module.exports.test = t;
