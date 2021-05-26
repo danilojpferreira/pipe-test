@@ -1,0 +1,50 @@
+[
+  {
+    "type": "SET_GLOBAL",
+    "variables": {
+      "baseUrl": "http://localhost/api",
+      "config": {
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      }
+    }
+  },
+  {
+    "type": "CRUD",
+    "request": {
+      "type": "GET",
+      "path": "/health"
+    },
+    "result": {
+      "allow": [
+        "200"
+      ],
+      "deny": [
+        "*"
+      ]
+    },
+    "funcs": [
+      "if (response.status === 200) global = {...global, app_health: {...response.data[0]}};"
+    ]
+  },
+  {
+    "type": "CRUD",
+    "request": {
+      "type": "POST",
+      "path": "/check",
+      "data": {
+        "app_config": "$global.app_health"
+      }
+    },
+    "result": {
+      "allow": [
+        "200"
+      ],
+      "deny": [
+        "*"
+      ]
+    },
+    "funcs": []
+  }
+]
