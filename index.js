@@ -7,7 +7,9 @@
 
 const t = async (pipeline, options, pwd) => {
   if (!Array.isArray(pipeline) || !pipeline?.length) {
-    console.log('pipeline should be a valid json, with at least 1 array element');
+    console.log(
+      "pipeline should be a valid json, with at least 1 array element"
+    );
     return null;
   }
 
@@ -185,13 +187,14 @@ const t = async (pipeline, options, pwd) => {
           }
         } else {
           const data = {};
-          if (request?.data?.length) {
-            await forEachSeries(
-              Object.keys(request.data).map((i) => i),
-              async (key) => {
+          if (request?.data) {
+            const keys = Object.keys(request.data);
+            if (keys.length) {
+              await forEachSeries(keys, async (key) => {
+                console.log(key);
                 data[key] = await replacer(request.data[key]);
-              }
-            );
+              });
+            }
           }
 
           log(
@@ -202,7 +205,7 @@ const t = async (pipeline, options, pwd) => {
           try {
             response = await axios[request.type.toLowerCase()](
               url,
-              data,
+              stringify(data),
               config
             );
           } catch (error) {
@@ -214,7 +217,14 @@ const t = async (pipeline, options, pwd) => {
           result.allow.includes(responseStatus) ||
           result.allow.includes("*")
         ) {
-          log(`Return success:\t${stringify({status: response.status, headers: response.headers, config: response.config, data: response.data})}`);
+          log(
+            `Return success:\t${stringify({
+              status: response.status,
+              headers: response.headers,
+              config: response.config,
+              data: response.data,
+            })}`
+          );
           stageInfo.result = setStageResult(stagesResults.SUCCESS);
         } else if (
           result.deny.includes(responseStatus) ||
@@ -256,7 +266,13 @@ const t = async (pipeline, options, pwd) => {
       if (error) log(`Error on write results:\t${stringify(error)}`);
     }
   );
-  console.info(`${!stopFlag ? 'PIPELINE FINISHED WITH SUCCESS' : 'PIPELINE FINISHED WITH ERRORS'}`)
+  console.info(
+    `${
+      !stopFlag
+        ? "PIPELINE FINISHED WITH SUCCESS"
+        : "PIPELINE FINISHED WITH ERRORS"
+    }`
+  );
   console.info(`Log file writed in ${resolve(logPath)}`);
   console.info(`Result file writed in ${resolve(resultPath)}`);
 };
