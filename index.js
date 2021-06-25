@@ -34,15 +34,15 @@ const t = async (pipeline, options, pwd) => {
         return newValue;
       }
       return value;
-    } else if (Array.isArray(value) && value?.length) {
+    } else if (Array.isArray(value)) {
       const arr = [];
-      await forEachSeries(value, async (itemOfArray) => {
-        const newItemOfArray = await replacer(itemOfArray);
-        arr.push(newItemOfArray);
-      });
-
+      if (value?.length)
+        await forEachSeries(value, async (itemOfArray) => {
+          const newItemOfArray = await replacer(itemOfArray);
+          arr.push(newItemOfArray);
+        });
       return arr;
-    } else if (typeof value === "object") {
+    } else if (value && typeof value === "object") {
       const keys = Object.keys(value);
       const newValue = {};
       if (keys?.length) {
@@ -54,6 +54,21 @@ const t = async (pipeline, options, pwd) => {
       return newValue;
     }
     return value;
+  };
+
+  const mergeConfigs = (globalConfig, requestConfig) => {
+    const merge = { ...globalConfig };
+    if (requestConfig && typeof requestConfig === "object") {
+      Object.entries(requestConfig).forEach(([key, value]) => {
+        if (key in globalConfig) {
+          merge[key] =
+            typeof value === "object" && !Array.isArray(value)
+              ? { ...globalConfig[key], ...value }
+              : value;
+        }
+      });
+    }
+    return merge;
   };
 
   const stringify = (obj) => {
@@ -105,7 +120,12 @@ const t = async (pipeline, options, pwd) => {
     appendFileSync(logPath, newStr);
   };
 
-  const stagesResults = {
+  const stageTypes = {
+    CRUD: "CRUD",
+    SET_GLOBAL: "SET_GLOBAL",
+  };
+
+  const stageResults = {
     SUCCESS: "SUCCESS",
     FAIL: "FAIL",
     UNDEFINED: "UNDEFINED",
@@ -114,17 +134,17 @@ const t = async (pipeline, options, pwd) => {
 
   const setStageResult = (result) => {
     switch (result) {
-      case stagesResults.SUCCESS:
-        console.info(stagesResults.SUCCESS);
-        return stagesResults.SUCCESS;
-      case stagesResults.FAIL:
-        console.warn(stagesResults.FAIL);
+      case stageResults.SUCCESS:
+        console.info(stageResults.SUCCESS);
+        return stageResults.SUCCESS;
+      case stageResults.FAIL:
+        console.warn(stageResults.FAIL);
         stopFlag = true;
-        return stagesResults.FAIL;
+        return stageResults.FAIL;
       default:
-        console.warn(stagesResults.UNDEFINED);
+        console.warn(stageResults.UNDEFINED);
         stopFlag = true;
-        return stagesResults.UNDEFINED;
+        return stageResults.UNDEFINED;
     }
   };
 
@@ -132,7 +152,14 @@ const t = async (pipeline, options, pwd) => {
   let global = {};
 
   const runStage = async (stage, index) => {
-    const { type, request, result, funcs, variables, description } = stage;
+    const {
+      type = stageTypes.CRUD,
+      request,
+      result,
+      funcs,
+      variables,
+      description,
+    } = stage;
     log(
       `Starting stage ${index + 1} --> ${type} ${
         description ? `--> ${description}` : ""
@@ -151,24 +178,33 @@ const t = async (pipeline, options, pwd) => {
     };
 
     switch (type) {
-      case "SET_GLOBAL":
+      case stageTypes.SET_GLOBAL:
         log(
           `Setting global variables.\nprevious state:\t${stringify(
             global
           )}\nnext state:\t${stringify(variables)}`
         );
         global = variables;
-        stageInfo.result = setStageResult(stagesResults.SUCCESS);
+        stageInfo.result = setStageResult(stageResults.SUCCESS);
 
         break;
-      case "CRUD":
+      case stageTypes.CRUD:
         let response = null;
         const model = request.type.toLowerCase();
         const url = `${global.baseUrl ?? ""}${request.path}`;
-        const config = {
-          ...(global.config ?? null),
-          ...request.config,
-        };
+        const configuration = mergeConfigs(global.config, request.config);
+
+        // Replace config with global values
+        const config = {};
+        if (configuration) {
+          const keys = Object.keys(configuration);
+          if (keys.length) {
+            await forEachSeries(keys, async (key) => {
+              config[key] = await replacer(configuration[key]);
+            });
+          }
+        }
+
         if (model === "delete" || model === "get") {
           log(
             `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
@@ -180,10 +216,11 @@ const t = async (pipeline, options, pwd) => {
           } catch (error) {
             response = {
               status: error.response.status,
-              config: error.config
-            }
+              config: error.config,
+            };
           }
         } else {
+          // Replace data with global values
           const data = {};
           if (request?.data) {
             const keys = Object.keys(request.data);
@@ -199,6 +236,7 @@ const t = async (pipeline, options, pwd) => {
               config
             )}\nwith data:\t${stringify(data)}`
           );
+
           try {
             response = await axios[request.type.toLowerCase()](
               url,
@@ -208,8 +246,8 @@ const t = async (pipeline, options, pwd) => {
           } catch (error) {
             response = {
               status: error.response.status,
-              config: error.config
-            }
+              config: error.config,
+            };
           }
         }
 
@@ -226,17 +264,19 @@ const t = async (pipeline, options, pwd) => {
               data: response.data,
             })}`
           );
-          stageInfo.result = setStageResult(stagesResults.SUCCESS);
+          stageInfo.result = setStageResult(stageResults.SUCCESS);
         } else if (
           result.deny.includes(responseStatus) ||
           result.deny.includes("*")
         ) {
-          log(`Return failed:\t${stringify({
-            status: response.status,
-            config: response.config,
-          })}`);
-          stageInfo.result = setStageResult(stagesResults.FAIL);
-        } else stageInfo.result = setStageResult(stagesResults.UNDEFINED);
+          log(
+            `Return failed:\t${stringify({
+              status: response.status,
+              config: response.config,
+            })}`
+          );
+          stageInfo.result = setStageResult(stageResults.FAIL);
+        } else stageInfo.result = setStageResult(stageResults.UNDEFINED);
 
         if (funcs?.length) {
           await forEachSeries(funcs, async (func) => {
@@ -277,8 +317,8 @@ const t = async (pipeline, options, pwd) => {
         : "PIPELINE FINISHED WITH ERRORS"
     }`
   );
-  console.info(`Log file writed in ${resolve(logPath)}`);
-  console.info(`Result file writed in ${resolve(resultPath)}`);
+  console.info(`Log file written in ${resolve(logPath)}`);
+  console.info(`Result file written in ${resolve(resultPath)}`);
 };
 
 module.exports.test = t;
