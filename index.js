@@ -56,6 +56,21 @@ const t = async (pipeline, options, pwd) => {
     return value;
   };
 
+  const mergeConfigs = (globalConfig, requestConfig) => {
+    const merge = { ...globalConfig };
+    if (requestConfig && typeof requestConfig === "object") {
+      Object.entries(requestConfig).forEach(([key, value]) => {
+        if (key in globalConfig) {
+          merge[key] =
+            typeof value === "object" && !Array.isArray(value)
+              ? { ...globalConfig[key], ...value }
+              : value;
+        }
+      });
+    }
+    return merge;
+  };
+
   const stringify = (obj) => {
     try {
       const parsed = JSON.stringify(obj);
@@ -137,7 +152,14 @@ const t = async (pipeline, options, pwd) => {
   let global = {};
 
   const runStage = async (stage, index) => {
-    const { type = stageTypes.CRUD, request, result, funcs, variables, description } = stage;
+    const {
+      type = stageTypes.CRUD,
+      request,
+      result,
+      funcs,
+      variables,
+      description,
+    } = stage;
     log(
       `Starting stage ${index + 1} --> ${type} ${
         description ? `--> ${description}` : ""
@@ -170,10 +192,7 @@ const t = async (pipeline, options, pwd) => {
         let response = null;
         const model = request.type.toLowerCase();
         const url = `${global.baseUrl ?? ""}${request.path}`;
-        const config = {
-          ...(global.config ?? null),
-          ...request.config,
-        };
+        const config = mergeConfigs(global.config, request.config);
         if (model === "delete" || model === "get") {
           log(
             `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
@@ -185,8 +204,8 @@ const t = async (pipeline, options, pwd) => {
           } catch (error) {
             response = {
               status: error.response.status,
-              config: error.config
-            }
+              config: error.config,
+            };
           }
         } else {
           const data = {};
@@ -213,8 +232,8 @@ const t = async (pipeline, options, pwd) => {
           } catch (error) {
             response = {
               status: error.response.status,
-              config: error.config
-            }
+              config: error.config,
+            };
           }
         }
 
@@ -236,10 +255,12 @@ const t = async (pipeline, options, pwd) => {
           result.deny.includes(responseStatus) ||
           result.deny.includes("*")
         ) {
-          log(`Return failed:\t${stringify({
-            status: response.status,
-            config: response.config,
-          })}`);
+          log(
+            `Return failed:\t${stringify({
+              status: response.status,
+              config: response.config,
+            })}`
+          );
           stageInfo.result = setStageResult(stageResults.FAIL);
         } else stageInfo.result = setStageResult(stageResults.UNDEFINED);
 
@@ -282,8 +303,8 @@ const t = async (pipeline, options, pwd) => {
         : "PIPELINE FINISHED WITH ERRORS"
     }`
   );
-  console.info(`Log file writed in ${resolve(logPath)}`);
-  console.info(`Result file writed in ${resolve(resultPath)}`);
+  console.info(`Log file written in ${resolve(logPath)}`);
+  console.info(`Result file written in ${resolve(resultPath)}`);
 };
 
 module.exports.test = t;
