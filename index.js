@@ -42,7 +42,7 @@ const t = async (pipeline, options, pwd) => {
       });
 
       return arr;
-    } else if (typeof value === "object") {
+    } else if (value && typeof value === "object") {
       const keys = Object.keys(value);
       const newValue = {};
       if (keys?.length) {
@@ -105,7 +105,12 @@ const t = async (pipeline, options, pwd) => {
     appendFileSync(logPath, newStr);
   };
 
-  const stagesResults = {
+  const stageTypes = {
+    CRUD: "CRUD",
+    SET_GLOBAL: "SET_GLOBAL",
+  };
+
+  const stageResults = {
     SUCCESS: "SUCCESS",
     FAIL: "FAIL",
     UNDEFINED: "UNDEFINED",
@@ -114,17 +119,17 @@ const t = async (pipeline, options, pwd) => {
 
   const setStageResult = (result) => {
     switch (result) {
-      case stagesResults.SUCCESS:
-        console.info(stagesResults.SUCCESS);
-        return stagesResults.SUCCESS;
-      case stagesResults.FAIL:
-        console.warn(stagesResults.FAIL);
+      case stageResults.SUCCESS:
+        console.info(stageResults.SUCCESS);
+        return stageResults.SUCCESS;
+      case stageResults.FAIL:
+        console.warn(stageResults.FAIL);
         stopFlag = true;
-        return stagesResults.FAIL;
+        return stageResults.FAIL;
       default:
-        console.warn(stagesResults.UNDEFINED);
+        console.warn(stageResults.UNDEFINED);
         stopFlag = true;
-        return stagesResults.UNDEFINED;
+        return stageResults.UNDEFINED;
     }
   };
 
@@ -132,7 +137,7 @@ const t = async (pipeline, options, pwd) => {
   let global = {};
 
   const runStage = async (stage, index) => {
-    const { type, request, result, funcs, variables, description } = stage;
+    const { type = stageTypes.CRUD, request, result, funcs, variables, description } = stage;
     log(
       `Starting stage ${index + 1} --> ${type} ${
         description ? `--> ${description}` : ""
@@ -151,17 +156,17 @@ const t = async (pipeline, options, pwd) => {
     };
 
     switch (type) {
-      case "SET_GLOBAL":
+      case stageTypes.SET_GLOBAL:
         log(
           `Setting global variables.\nprevious state:\t${stringify(
             global
           )}\nnext state:\t${stringify(variables)}`
         );
         global = variables;
-        stageInfo.result = setStageResult(stagesResults.SUCCESS);
+        stageInfo.result = setStageResult(stageResults.SUCCESS);
 
         break;
-      case "CRUD":
+      case stageTypes.CRUD:
         let response = null;
         const model = request.type.toLowerCase();
         const url = `${global.baseUrl ?? ""}${request.path}`;
@@ -226,7 +231,7 @@ const t = async (pipeline, options, pwd) => {
               data: response.data,
             })}`
           );
-          stageInfo.result = setStageResult(stagesResults.SUCCESS);
+          stageInfo.result = setStageResult(stageResults.SUCCESS);
         } else if (
           result.deny.includes(responseStatus) ||
           result.deny.includes("*")
@@ -235,8 +240,8 @@ const t = async (pipeline, options, pwd) => {
             status: response.status,
             config: response.config,
           })}`);
-          stageInfo.result = setStageResult(stagesResults.FAIL);
-        } else stageInfo.result = setStageResult(stagesResults.UNDEFINED);
+          stageInfo.result = setStageResult(stageResults.FAIL);
+        } else stageInfo.result = setStageResult(stageResults.UNDEFINED);
 
         if (funcs?.length) {
           await forEachSeries(funcs, async (func) => {
