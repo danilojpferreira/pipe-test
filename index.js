@@ -34,13 +34,13 @@ const t = async (pipeline, options, pwd) => {
         return newValue;
       }
       return value;
-    } else if (Array.isArray(value) && value?.length) {
+    } else if (Array.isArray(value)) {
       const arr = [];
-      await forEachSeries(value, async (itemOfArray) => {
-        const newItemOfArray = await replacer(itemOfArray);
-        arr.push(newItemOfArray);
-      });
-
+      if (value?.length)
+        await forEachSeries(value, async (itemOfArray) => {
+          const newItemOfArray = await replacer(itemOfArray);
+          arr.push(newItemOfArray);
+        });
       return arr;
     } else if (value && typeof value === "object") {
       const keys = Object.keys(value);
