@@ -192,7 +192,19 @@ const t = async (pipeline, options, pwd) => {
         let response = null;
         const model = request.type.toLowerCase();
         const url = `${global.baseUrl ?? ""}${request.path}`;
-        const config = mergeConfigs(global.config, request.config);
+        const configuration = mergeConfigs(global.config, request.config);
+
+        // Replace config with global values
+        const config = {};
+        if (configuration) {
+          const keys = Object.keys(configuration);
+          if (keys.length) {
+            await forEachSeries(keys, async (key) => {
+              config[key] = await replacer(configuration[key]);
+            });
+          }
+        }
+
         if (model === "delete" || model === "get") {
           log(
             `Doing crud of type:\t${model}\nto:\t${url}\nwith config:\t${stringify(
@@ -208,6 +220,7 @@ const t = async (pipeline, options, pwd) => {
             };
           }
         } else {
+          // Replace data with global values
           const data = {};
           if (request?.data) {
             const keys = Object.keys(request.data);
@@ -223,6 +236,7 @@ const t = async (pipeline, options, pwd) => {
               config
             )}\nwith data:\t${stringify(data)}`
           );
+
           try {
             response = await axios[request.type.toLowerCase()](
               url,
