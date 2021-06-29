@@ -25,7 +25,8 @@ const t = async (pipeline, options, pwd) => {
 
   const replacer = async (value) => {
     if (typeof value === "string") {
-      if (value.includes("$global")) {
+      const globalString = "$global";
+      if (value.includes(globalString)) {
         const regex = /\$global.+?(?=\/|$)/g;
         const matches = value.match(regex);
         if (matches?.length > 1) {
@@ -33,9 +34,18 @@ const t = async (pipeline, options, pwd) => {
             const replacerValue = await replacer(match);
             value = value.replace(match, replacerValue);
           });
-          return value;
-        } else if (matches?.length === 1) {
-          const inx = value.split(".");
+        } else {
+          let arr = [];
+          let inx = value.split(".");
+          if (inx[0] !== globalString && inx[1].includes("/")) {
+            inx.forEach((val) => {
+              const split = val.split("/");
+              if (val.includes(globalString))
+                arr.push(split.filter((val) => val === globalString)[0]);
+              else arr.push(split[0]);
+            });
+            inx = arr;
+          }
           inx.shift();
           let createString = "global";
           inx.forEach((i) => (createString += `['${i}']`));
