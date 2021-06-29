@@ -221,7 +221,7 @@ const t = async (pipeline, options, pwd) => {
           }
         } else {
           // Replace data with global values
-          const data = {};
+          const data = Array.isArray(request?.data) ? [] : {};
           if (request?.data) {
             const keys = Object.keys(request.data);
             if (keys.length) {
