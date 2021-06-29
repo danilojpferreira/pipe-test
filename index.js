@@ -26,12 +26,22 @@ const t = async (pipeline, options, pwd) => {
   const replacer = async (value) => {
     if (typeof value === "string") {
       if (value.includes("$global")) {
-        const inx = value.split(".");
-        inx.shift();
-        let createString = "global";
-        inx.forEach((i) => (createString += `['${i}']`));
-        const newValue = await eval(createString);
-        return newValue;
+        const regex = /\$global.+?(?=\/|$)/g;
+        const matches = value.match(regex);
+        if (matches?.length > 1) {
+          await forEachSeries(matches, async (match) => {
+            const replacerValue = await replacer(match);
+            value = value.replace(match, replacerValue);
+          });
+          return value;
+        } else if (matches?.length === 1) {
+          const inx = value.split(".");
+          inx.shift();
+          let createString = "global";
+          inx.forEach((i) => (createString += `['${i}']`));
+          const newValue = await eval(createString);
+          value = value.replace(matches[0], newValue);
+        }
       }
       return value;
     } else if (Array.isArray(value)) {
@@ -189,10 +199,16 @@ const t = async (pipeline, options, pwd) => {
 
         break;
       case stageTypes.CRUD:
+        let path = "";
         let response = null;
         const model = request.type.toLowerCase();
-        const url = `${global.baseUrl ?? ""}${request.path}`;
         const configuration = mergeConfigs(global.config, request.config);
+
+        // Replace path with global values
+        if (request.path) {
+          path = await replacer(request.path);
+        }
+        const url = `${global.baseUrl ?? ""}${path}`;
 
         // Replace config with global values
         const config = {};
