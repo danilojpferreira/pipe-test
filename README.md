@@ -50,8 +50,8 @@ $ yarn add p-iteration
 
 After installed, the `pipe-test` command will be available. The command accepts 2 arguments, both of which must be valid JSON files:
 
-1. The [pipeline](#the-pipeline) file
-3. The [configuration](#custom-configuration) file (optional)
+1. The [pipeline](#-the-pipeline) file
+3. The [configuration](%EF%B8%8F-custom-configuration) file (optional)
 
 ```
 pipe-test pipeline.json options.json
@@ -73,16 +73,18 @@ The log file is updated real-time during the pipeline execution, and includes ex
 
 The pipeline consists of a JSON file with a single array that contains the test objects, and each object represents a stage in the test pipeline.
 
-Below is a table description of the valid JSON properties and how each one works.
+If a test passes, the pipeline sleeps for the configured delay time before starting the next stage. <ins>In case of a test failure, the pipeline stops execution</ins>.
+
+Below is a table description of each valid object property and how it works.
 
 | Attribute   | Requirement                                                  | Default | Options          | Description                                                                                                                                                                                                                                      |
 | ----------- | ------------------------------------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | description | optional                                                     | -       | -                | String field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
-| type        | **at least one SET_GLOBAL required in the pipeline**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the base URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
-| request     | **required**                                                 | -       | -                | Request object, structured as shown [here](#request)                                                                                                                                                                                                        |
-| result      | **required**                                                 | -       | -                | Object with **allow** and **deny** integer array properties that define the valid response statuses for the test to be considered a success or a fail.<br />While **allow** is always required, **deny** is also required, except in case of the asterisk operator (\*) in **allow**. See the correct structure [here](#result)                                                                                          |
+| type        | **at least one SET_GLOBAL required in the pipeline**                         | CRUD    | `SET_GLOBAL`, `CRUD` | **`SET_GLOBAL`** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the base URL, header configurations and any initial global values <br /> **`CRUD`** => Default value, used to indicate a REST request   |
+| request     | **required**                                  | -       | -                | Request object, structured as shown [here](#request)                                                                                                                                                                                                        |
+| result      | **required**                                                 | -       | -                | Object with `allow` and `deny` integer array properties that define the valid response statuses for the test to be considered a success or a fail.<br />While `allow` is always required, `deny` is also required, except in case of the asterisk operator (\*) in `allow`. See the correct structure [here](#result)                                                                                          |
 | funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request. [See an example](#funcs)    |
-| variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
+| variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a `baseUrl` property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
 
 ## 🌎 Global variables
 
@@ -176,8 +178,8 @@ The configuration file is a simple JSON with the following properties:
 <ins>**Note</ins>:** In order for the files to be created correctly in the desired directory, you must add a forward slash at the end of the path, e.g. `"./output/"`
 
 - **name_mode** => One of two values, `"BY_DATE"` or `"CUSTOM"`
-  - BY_DATE => Default value, saves both JSON and log output files with the ISO 8601 date/time format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
-  - CUSTOM => Saves output files with a custom name, provided by the **name** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
+  - `BY_DATE` => Default value, saves both JSON and log output files with the ISO 8601 date/time format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
+  - `CUSTOM` => Saves output files with a custom name, provided by the **name** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
 - **name** => Custom output file name (the same name will be used for both JSON and log files).
 
 <ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
