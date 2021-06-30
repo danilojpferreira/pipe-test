@@ -16,7 +16,7 @@
 	<a href="#about">About</a> •
 	<a href="#installation">Installation</a> •
 	<a href="#usage">Usage</a> •
-	<a href="#author">Authors</a> •
+	<a href="#authors">Authors</a> •
 	<a href="#license">License</a> •
 	<a href="#languages">Languages</a>
 </p>
@@ -72,6 +72,21 @@ pipe-test pipeline.json options.json
 
 If no configuration file is provided, the [default configuration](./options.json) will be used.
 
+## 🔩 The pipeline
+
+The pipeline consists of a JSON file with a single array that contains the test objects, and each object represents a stage in the test pipeline.
+
+Below is a table description of the valid JSON properties and how each one works.
+
+| Attribute   | Requirement                                                  | Default | Options          | Description                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| description | optional                                                     | -       | -                | Field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
+| type        | **at least one SET_GLOBAL required**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the destination URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
+| request     | **required**                                                 | -       | -                | Request object, structured as shown below                                                                                                                                                                                                        |
+| result      | **required**                                                 | -       | -                | Object with **allow** and **deny** integer array properties that define the valid response statuses for the test to be considered a success or a fail.<br />While **allow** is always required, **deny** is also required, except in case of the asterisk operator (\*) in **allow**. See the correct structure [here](#result)                                                                                          |
+| funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
+| variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
+
 ## • Global variables
 
 A global variable is available to use throughout the pipeline, to facilitate the use of common values in multiple requests, such as an id. The global variable consists of a JavaScript object with any properties, each property being a global value in it of itself:
@@ -101,21 +116,25 @@ In order to access these values in the pipeline, you must use `$global.<property
   "data": {}
 }
 ```
-
-## 🔩 The pipeline
-
-The pipeline consists of a JSON file with a single array that contains the test objects, and each object represents a stage in the test pipeline.
-
-Below is a table description of the valid JSON properties and how each one works.
-
-| Attribute   | Requirement                                                  | Default | Options          | Description                                                                                                                                                                                                                                      |
-| ----------- | ------------------------------------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| description | optional                                                     | -       | -                | Field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
-| type        | **at least one SET_GLOBAL required**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the destination URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
-| request     | **required**                                                 | -       | -                | Request object, structured as shown below                                                                                                                                                                                                        |
-| result      | **required**                                                 | -       | -                | Object with **allow** and **deny** integer array properties that define the valid response statuses for the test to be considered a success or a fail                                                                                            |
-| funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
-| variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
+### Result
+```json
+"result": {
+  "allow": [
+    200,
+    404
+  ],
+  "deny": [
+    "*"
+  ]
+}
+```
+```json
+"result": {
+  "allow": [
+    "*"
+  ]
+}
+```
 
 ## ⚙️ Custom Configuration
 
@@ -141,17 +160,6 @@ The configuration file is a simple JSON with the following properties:
     <td align="center"><a href="https://www.linkedin.com/in/leticia-vigna/"><img style="border-radius: 50%;" height="auto" width="150px" src="https://avatars.githubusercontent.com/u/41032355?v=4"><br /><p><b>Letícia Vigna</b></p></a><p>Co-Author</p></td>
   </tr>
 </table>
-
-```json
-"result": {
-  "allow": [
-    200
-  ],
-  "deny": [
-    "*"
-  ]
-}
-```
 
 [![Twitter Badge](https://img.shields.io/badge/-@tgmarinho-1ca0f1?style=flat-square&labelColor=1ca0f1&logo=twitter&logoColor=white&link=https://twitter.com/tgmarinho)](https://twitter.com/tgmarinho) [![Linkedin Badge](https://img.shields.io/badge/-Thiago-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/danilojpferreira)](https://www.linkedin.com/in/tgmarinho/) [![Gmail Badge](https://img.shields.io/badge/-tgmarinho@gmail.com-c14438?style=flat-square&logo=Gmail&logoColor=white&link=mailto:tgmarinho@gmail.com)](mailto:tgmarinho@gmail.com)
 
