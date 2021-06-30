@@ -16,7 +16,7 @@
 	<a href="#about">About</a> •
 	<a href="#installation">Installation</a> •
 	<a href="#usage">Usage</a> •
-	<a href="#author">Author</a> •
+	<a href="#author">Authors</a> •
 	<a href="#license">License</a> •
 	<a href="#languages">Languages</a>
 </p>
@@ -80,12 +80,27 @@ A global variable is available to use throughout the pipeline, to facilitate the
 const global = {
   user_id: "12345",
   user_email: "user@email.com",
-};
+}
 ```
 
 In order to access these values in the pipeline, you must use `$global.<property>` e.g. `$global.user_id`.
 
 **Only the following pipeline properties able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
+
+## • Object structures
+### Request
+```json
+"request": {
+  "type": "GET",
+  "path": "/user/$global.user_id",
+  "config": {
+    "headers": {
+      "Authorization": "$global.user_token"
+    }
+  },
+  "data": {}
+}
+```
 
 ## 🔩 The pipeline
 
@@ -118,7 +133,14 @@ The configuration file is a simple JSON with the following properties:
 
 > <ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
 
-# Author
+# Authors
+
+<table>
+  <tr>
+    <td align="center"><a href="https://www.linkedin.com/in/danilojpferreira/"><img style="border-radius: 50%;" height="auto" width="150px" src="https://avatars.githubusercontent.com/u/43321038?v=4"><br /><p><b>Danilo Pereira</b></p></a><p>Author</p></td>
+    <td align="center"><a href="https://www.linkedin.com/in/leticia-vigna/"><img style="border-radius: 50%;" height="auto" width="150px" src="https://avatars.githubusercontent.com/u/41032355?v=4"><br /><p><b>Letícia Vigna</b></p></a><p>Co-Author</p></td>
+  </tr>
+</table>
 
 ```json
 "result": {
