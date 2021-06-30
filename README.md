@@ -73,46 +73,47 @@ pipe-test pipeline.json options.json
 If no configuration file is provided, the [default configuration](./options.json) will be used.
 
 ### • Global variables
-A global variable is available to use throughout the pipeline, to facilitate the use of common values in multiple requests, such as an id. The global variable consists of a JavaScript object with any attributes, each attribute being a global value in it of itself:
+
+A global variable is available to use throughout the pipeline, to facilitate the use of common values in multiple requests, such as an id. The global variable consists of a JavaScript object with any properties, each property being a global value in it of itself:
 
 ```javascript
 const global = {
-  "user_id": "12345",
-  "user_email": "user@email.com"
-}
+  user_id: "12345",
+  user_email: "user@email.com",
+};
 ```
 
-In order to access these values in the pipeline, you must use `$global.<attribute>` e.g. `$global.user_id`.
+In order to access these values in the pipeline, you must use `$global.<property>` e.g. `$global.user_id`.
 
-**Only the following pipeline attributes able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
+**Only the following pipeline properties able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
 
 ### 🔩 The pipeline
 
 The pipeline consists of a JSON file with a single array that contains the test objects, and each object represents a stage in the test pipeline.
 
-Below is a table description of the valid JSON attributes and how each one works.
+Below is a table description of the valid JSON properties and how each one works.
 
-| Attribute   | Requirement                          | Default | Options          | Description                                                                                                                                                                                                                                    |
-| ----------- | ------------------------------------ | ------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| description | optional                             | -       | -                | Field that describes the test, meant for organizational and understanding purposes                                                                                                                                                             |
-| type        | **at least one SET_GLOBAL required** | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the destination URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request |
-| request     | **required**                         | -       | -                | Request object, structured as shown below                                                                                                                                                                                                      |
-| result      | **required**                         | -       | -                | Object with **allow** and **deny** integer array attributes that define the valid response statuses for the test to be considered a success or a fail                                                                                          |
-| funcs       | optional                             | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
-| variables       | **exclusive to SET_GLOBAL, optional but highly recommended**                             | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** attribute used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain *the complete URL*    |
+| Attribute   | Requirement                                                  | Default | Options          | Description                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| description | optional                                                     | -       | -                | Field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
+| type        | **at least one SET_GLOBAL required**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the destination URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
+| request     | **required**                                                 | -       | -                | Request object, structured as shown below                                                                                                                                                                                                        |
+| result      | **required**                                                 | -       | -                | Object with **allow** and **deny** integer array properties that define the valid response statuses for the test to be considered a success or a fail                                                                                            |
+| funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
+| variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
 
 ### ⚙️ Custom Configuration
 
-The configuration file is a simple JSON with the following attributes:
+The configuration file is a simple JSON with the following properties:
 
 - **delay** => Milliseconds to wait between the execution of each individual test
-- **path** => By default, the output files are generated in the same directory where the command was executed. Therfore, use this attribute if you would like to change the output path. Don't worry, if the provided output directory does not exist, it will be created.
+- **path** => By default, the output files are generated in the same directory where the command was executed. Therfore, use this property if you would like to change the output path. Don't worry, if the provided output directory does not exist, it will be created.
 
 > <ins>**Note</ins>:** In order for the files to be created correctly in the desired directory, you must add a forward slash at the end of the path, e.g. `"./output/"`
 
 - **name_mode** => One of two values, `"BY_DATE"` or `"CUSTOM"`
   - BY_DATE => Default value, saves both JSON and log output files with the ISO 8601 date/time format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
-  - CUSTOM => Saves output files with a custom name, provided by the **name** attribute. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
+  - CUSTOM => Saves output files with a custom name, provided by the **name** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
 - **name** => Custom output file name (the same name will be used for both JSON and log files).
 
 > <ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
