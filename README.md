@@ -21,13 +21,13 @@
 	<a href="#languages">Languages</a>
 </p>
 
-## About
+# About
 
 Execute endpoint tests with a simple JSON file.
 
 Pipe-test is an automatic testing solution for REST APIs, easy to configure and easy to use.
 
-## Installation
+# Installation
 
 Use your favorite JavaScript package manager!
 
@@ -43,7 +43,7 @@ Yarn
 $ yarn add @danilo_pereira/pipe-test
 ```
 
-### Dependencies
+## Dependencies
 
 Likewise, the `p-iteration` dependency must be installed manually for the project to work.
 
@@ -59,7 +59,7 @@ Yarn
 $ yarn add p-iteration
 ```
 
-## Usage
+# Usage
 
 After installed, the `pipe-test` command will be available. The command accepts 2 arguments, both of which must be valid JSON files:
 
@@ -72,7 +72,7 @@ pipe-test pipeline.json options.json
 
 If no configuration file is provided, the [default configuration](./options.json) will be used.
 
-### • Global variables
+## • Global variables
 
 A global variable is available to use throughout the pipeline, to facilitate the use of common values in multiple requests, such as an id. The global variable consists of a JavaScript object with any properties, each property being a global value in it of itself:
 
@@ -87,7 +87,7 @@ In order to access these values in the pipeline, you must use `$global.<property
 
 **Only the following pipeline properties able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
 
-### 🔩 The pipeline
+## 🔩 The pipeline
 
 The pipeline consists of a JSON file with a single array that contains the test objects, and each object represents a stage in the test pipeline.
 
@@ -102,7 +102,7 @@ Below is a table description of the valid JSON properties and how each one works
 | funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
 | variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
 
-### ⚙️ Custom Configuration
+## ⚙️ Custom Configuration
 
 The configuration file is a simple JSON with the following properties:
 
@@ -118,7 +118,7 @@ The configuration file is a simple JSON with the following properties:
 
 > <ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
 
-## Author
+# Author
 
 ```json
 "result": {
@@ -133,11 +133,11 @@ The configuration file is a simple JSON with the following properties:
 
 [![Twitter Badge](https://img.shields.io/badge/-@tgmarinho-1ca0f1?style=flat-square&labelColor=1ca0f1&logo=twitter&logoColor=white&link=https://twitter.com/tgmarinho)](https://twitter.com/tgmarinho) [![Linkedin Badge](https://img.shields.io/badge/-Thiago-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/danilojpferreira)](https://www.linkedin.com/in/tgmarinho/) [![Gmail Badge](https://img.shields.io/badge/-tgmarinho@gmail.com-c14438?style=flat-square&logo=Gmail&logoColor=white&link=mailto:tgmarinho@gmail.com)](mailto:tgmarinho@gmail.com)
 
-## License
+# License
 
 This project is under the [GNU General Public License](./LICENSE).
 
-## Languages
+# Languages
 
 [Brazilian Portuguese](./README-PT.md) | [English](./README.md)
 
