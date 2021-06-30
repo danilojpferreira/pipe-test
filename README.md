@@ -81,12 +81,12 @@ A global variable is available to use throughout the pipeline, to facilitate the
 
 ```javascript
 const global = {
-  user_id: "12345",
-  user_email: "user@email.com",
+  name: "Lorem Ipsum",
+  age: 40,
 }
 ```
 
-In order to access these values in the pipeline, you must use `$global.<property>` e.g. `$global.user_id`.
+In order to access these values in the pipeline, you must use `$global.<property>` e.g. `$global.name`.
 
 **Only the following pipeline properties able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
 
@@ -128,6 +128,33 @@ In order to access these values in the pipeline, you must use `$global.<property
 "funcs": [
   "if (response.status === 200) global = {...global, user_token: response.data};"
 ]
+```
+
+## Example
+```json
+{
+  "description":"Perform user login",
+  "type":"CRUD",
+  "request":{
+    "type":"POST",
+    "path":"/login",
+    "data":{
+      "username": "$global.user_email",
+      "password": "$global.user_password"
+    }
+  },
+  "result":{
+    "allow":[
+      200
+    ],
+    "deny":[
+      "*"
+    ]
+  },
+  "funcs":[
+    "if (response.status === 200) global = {...global, user_id: response.data.id, user_photo: response.data.photo};"
+  ]
+}
 ```
 
 ## ⚙️ Custom Configuration
