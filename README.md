@@ -31,15 +31,9 @@ Pipe-test is an automatic testing solution for REST APIs, easy to configure and 
 
 Use your favorite JavaScript package manager!
 
-NPM
-
-```
+```bash
 $ npm install @danilo_pereira/pipe-test
-```
 
-Yarn
-
-```
 $ yarn add @danilo_pereira/pipe-test
 ```
 
@@ -47,15 +41,9 @@ $ yarn add @danilo_pereira/pipe-test
 
 Likewise, the `p-iteration` dependency must be installed manually for the project to work.
 
-NPM
-
 ```
 $ npm install p-iteration
-```
 
-Yarn
-
-```
 $ yarn add p-iteration
 ```
 
@@ -87,7 +75,7 @@ Below is a table description of the valid JSON properties and how each one works
 | funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
 | variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
 
-## • Global variables
+## 🌎 Global variables
 
 A global variable is available to use throughout the pipeline, to facilitate the use of common values in multiple requests, such as an id. The global variable consists of a JavaScript object with any properties, each property being a global value in it of itself:
 
@@ -102,7 +90,7 @@ In order to access these values in the pipeline, you must use `$global.<property
 
 **Only the following pipeline properties able to replace global values: <ins>path</ins>, <ins>config</ins> and <ins>data</ins>.**
 
-## • Object structures
+## 🏗️ Object structures
 ### Request
 ```json
 "request": {
