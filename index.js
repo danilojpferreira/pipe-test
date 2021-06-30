@@ -77,18 +77,21 @@ const t = async (pipeline, options, pwd) => {
   };
 
   const mergeConfigs = (globalConfig, requestConfig) => {
-    const merge = { ...globalConfig };
-    if (requestConfig && typeof requestConfig === "object") {
-      Object.entries(requestConfig).forEach(([key, value]) => {
-        if (key in globalConfig) {
-          merge[key] =
-            typeof value === "object" && !Array.isArray(value)
-              ? { ...globalConfig[key], ...value }
-              : value;
-        }
-      });
+    if (globalConfig) {
+      const merge = { ...globalConfig };
+      if (requestConfig && typeof requestConfig === "object") {
+        Object.entries(requestConfig).forEach(([key, value]) => {
+          if (key in globalConfig) {
+            merge[key] =
+              typeof value === "object" && !Array.isArray(value)
+                ? { ...globalConfig[key], ...value }
+                : value;
+          }
+        });
+      }
+      return merge;
     }
-    return merge;
+    return requestConfig;
   };
 
   const stringify = (obj) => {
@@ -212,13 +215,13 @@ const t = async (pipeline, options, pwd) => {
         let path = "";
         let response = null;
         const model = request.type.toLowerCase();
-        const configuration = mergeConfigs(global.config, request.config);
+        const configuration = mergeConfigs(global?.config, request?.config);
 
         // Replace path with global values
         if (request.path) {
           path = await replacer(request.path);
         }
-        const url = `${global.baseUrl ?? ""}${path}`;
+        const url = `${global?.baseUrl ?? ""}${path}`;
 
         // Replace config with global values
         const config = {};
