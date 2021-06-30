@@ -68,11 +68,11 @@ Below is a table description of the valid JSON properties and how each one works
 
 | Attribute   | Requirement                                                  | Default | Options          | Description                                                                                                                                                                                                                                      |
 | ----------- | ------------------------------------------------------------ | ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| description | optional                                                     | -       | -                | Field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
-| type        | **at least one SET_GLOBAL required**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the destination URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
-| request     | **required**                                                 | -       | -                | Request object, structured as shown below                                                                                                                                                                                                        |
+| description | optional                                                     | -       | -                | String field that describes the test, meant for organizational and understanding purposes                                                                                                                                                               |
+| type        | **at least one SET_GLOBAL required in the pipeline**                         | CRUD    | SET_GLOBAL, CRUD | **SET_GLOBAL** => Overwrites the global variable, mandatory at the beginning of the pipeline to set the base URL, header configurations and any initial global values <br /> **CRUD** => Default value, used to indicate a REST request   |
+| request     | **required**                                                 | -       | -                | Request object, structured as shown [here](#request)                                                                                                                                                                                                        |
 | result      | **required**                                                 | -       | -                | Object with **allow** and **deny** integer array properties that define the valid response statuses for the test to be considered a success or a fail.<br />While **allow** is always required, **deny** is also required, except in case of the asterisk operator (\*) in **allow**. See the correct structure [here](#result)                                                                                          |
-| funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request     |
+| funcs       | optional                                                     | -       | -                | Array of strings that contain JavaScript code that will be executed in an eval function if the test passes. Useful for manipulating the global variable e.g. adding a new field with the request's result data to be used in a later request. [See an example](#funcs)    |
 | variables   | **exclusive to SET_GLOBAL, optional but highly recommended** | -       | -                | Object that **overwrites** the global variable, with a **baseUrl** property used to define the base URL used for every request on the pipeline. If no baseUrl is provided, all individual request paths will need to contain <ins>the complete URL</ins> |
 
 ## 🌎 Global variables
@@ -122,6 +122,12 @@ In order to access these values in the pipeline, you must use `$global.<property
     "*"
   ]
 }
+```
+### Funcs
+```json
+"funcs": [
+  "if (response.status === 200) global = {...global, user_token: response.data};"
+]
 ```
 
 ## ⚙️ Custom Configuration
