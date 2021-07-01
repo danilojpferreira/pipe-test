@@ -188,18 +188,12 @@ Another example can also be found in the [example folder](./example) of the proj
 ## ⚙️ Custom Configuration
 
 The configuration file is a simple JSON with the following properties:
-
-- **`delay`** ⇒ Milliseconds to wait between the execution of each individual test
-- **`path`** ⇒ By default, the output files are generated in the same directory where the command was executed. Therefore, use this property if you would like to change the output path. Don't worry, if the provided output directory does not exist, it will be created.
-
-<ins>**Note</ins>:** In order for the files to be created correctly in the desired directory, you must add a forward slash at the end of the path, e.g. `"./output/"`
-
-- **`name_mode`** ⇒ One of two values, `"BY_DATE"` or `"CUSTOM"`
-  - `BY_DATE` ⇒ Default value, saves both JSON and log output files with the ISO 8601 datetime format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
-  - `CUSTOM` ⇒ Saves output files with a custom name, provided by the **`name`** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
-- **`name`** ⇒ Custom output file name (the same name will be used for both JSON and log files)
-
-<ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
+| Attribute | Options             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|-----------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| delay     | -                   | Milliseconds to wait between the execution of each individual test (number data type, not string)                                                                                                                                                                                                                                                                                                                                                                  |
+| path      | -                   | By default, the output files are generated in the same directory where the command was executed. Therefore, use this property if you would like to change the output path. If the provided output directory does not exist, it will be created <br /> <ins>**Note</ins>:** In order for the files to be created correctly in the desired directory, you must add a forward slash at the end of the path, e.g. `./output/` instead of `./output`                    |
+| name_mode | `BY_DATE`, `CUSTOM` | **`BY_DATE`** ⇒ Default value, saves both JSON and log output files with the ISO 8601 datetime format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution <br /> **`CRUD`** ⇒ Saves output files with a custom name, provided by the **`name`** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins> |
+| name      | -                   | Custom output file name (the same name will be used for both JSON and log files) <br /> <ins>**Note</ins>:** This name will only be considered if **`name_mode`** is `CUSTOM`                                                                                                                                                                                                                                                                                    |
 
 ### 📌 Example
 ```json
