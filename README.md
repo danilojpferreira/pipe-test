@@ -36,16 +36,6 @@ $ npm install @danilo_pereira/pipe-test
 $ yarn add @danilo_pereira/pipe-test
 ```
 
-## Dependencies
-
-Likewise, the `p-iteration` dependency must be installed manually for the project to work.
-
-```
-$ npm install p-iteration
-
-$ yarn add p-iteration
-```
-
 # Usage
 
 After installed, the `pipe-test` command will be available. The command accepts 2 arguments, both of which must be valid JSON files:
@@ -103,7 +93,15 @@ In order to access these values in the pipeline, you must use `$global.<property
 
 ## 🏗️ Object structures
 ### Request
-```json
+
+| Attribute | Requirement  | Options                                 | Description                                                                  |
+|-----------|--------------|-----------------------------------------|------------------------------------------------------------------------------|
+| type      | **required** | `GET`, `POST`, `PUT`, `DELETE`, `PATH`            | The HTTP request method, in all caps                                             |
+| path      | **required** | -                                       | Request path that will append to the base URL, e.g. with a `baseURL` of `http://localhost:3000/api` and a path `/user/data`, the full request will be to `http://localhost:3000/api/user/data` |
+| config    | optional     | Object with any valid HTTP header field | Sets request-specific configuration, such as authentication or encoding      |
+| data      | optional     | -                                       | The body of data sent to the request, may be of type object, array or string |
+
+```javascript
 "request": {
   "type": "GET",
   "path": "/user/$global.user_id",
@@ -111,8 +109,7 @@ In order to access these values in the pipeline, you must use `$global.<property
     "headers": {
       "Authorization": "$global.user_token"
     }
-  },
-  "data": {}
+  }
 }
 ```
 ### Result
@@ -137,54 +134,72 @@ In order to access these values in the pipeline, you must use `$global.<property
 ### Funcs
 ```json
 "funcs": [
-  "if (response.status === 200) global = {...global, user_token: response.data};"
+  "global = {...global, user_data: response.data};"
 ]
 ```
 
-### ⏩ Example
-```json
-{
-  "description":"Perform user login",
-  "type":"CRUD",
-  "request":{
-    "type":"POST",
-    "path":"/login",
-    "data":{
-      "username": "$global.user_email",
-      "password": "$global.user_password"
+### 📌 Example
+```javascript
+[
+  {
+    "description": "Define global variables and destination URL",
+    "type": "SET_GLOBAL",
+    "variables": {
+      "baseUrl": "http://your-url/api",
+      "config": {
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      },
+      "user_id": "abc",
+      "user_email": "user123@test.com",
+      "user_password": "12345"
     }
   },
-  "result":{
-    "allow":[
-      200
-    ],
-    "deny":[
-      "*"
+  {
+    "description": "Perform user login",
+    "type": "CRUD", // Can be removed as it's the default value
+    "request": {
+      "type": "POST",
+      "path": "/login/$global.user_id",
+      "data": {
+        "username": "$global.user_email",
+        "password": "$global.user_password"
+      }
+    },
+    "result": {
+      "allow": [
+        200,
+        404
+      ],
+      "deny": [
+        "*"
+      ]
+    },
+    "funcs": [
+      "if (response.status === 200) global = {...global, user_token: response.data};"
     ]
-  },
-  "funcs":[
-    "if (response.status === 200) global = {...global, user_id: response.data.id, user_photo: response.data.photo};"
-  ]
-}
+  }
+ ]
 ```
 
 ## ⚙️ Custom Configuration
 
 The configuration file is a simple JSON with the following properties:
 
-- **delay** ⇒ Milliseconds to wait between the execution of each individual test
-- **path** ⇒ By default, the output files are generated in the same directory where the command was executed. Therefore, use this property if you would like to change the output path. Don't worry, if the provided output directory does not exist, it will be created.
+- **`delay`** ⇒ Milliseconds to wait between the execution of each individual test
+- **`path`** ⇒ By default, the output files are generated in the same directory where the command was executed. Therefore, use this property if you would like to change the output path. Don't worry, if the provided output directory does not exist, it will be created.
 
 <ins>**Note</ins>:** In order for the files to be created correctly in the desired directory, you must add a forward slash at the end of the path, e.g. `"./output/"`
 
-- **name_mode** ⇒ One of two values, `"BY_DATE"` or `"CUSTOM"`
-  - `BY_DATE` ⇒ Default value, saves both JSON and log output files with the ISO 8601 date/time format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
-  - `CUSTOM` ⇒ Saves output files with a custom name, provided by the **name** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
-- **name** ⇒ Custom output file name (the same name will be used for both JSON and log files).
+- **`name_mode`** ⇒ One of two values, `"BY_DATE"` or `"CUSTOM"`
+  - `BY_DATE` ⇒ Default value, saves both JSON and log output files with the ISO 8601 datetime format i.e. `"YYYY-MM-DDThh:mm:ss"`, e.g `2021-06-22T14:00:00.json`. Because of this, this option creates 2 new output files on each execution
+  - `CUSTOM` ⇒ Saves output files with a custom name, provided by the **`name`** property. <ins>With this option, the log file appends new content and the JSON file is overwritten on each new execution</ins>
+- **`name`** ⇒ Custom output file name (the same name will be used for both JSON and log files)
 
 <ins>**Note</ins>:** This name will only be considered if **name_mode** is `"CUSTOM"`
 
-### ⏩ Example
+### 📌 Example
 ```json
 {
   "delay": 1500,
@@ -197,8 +212,8 @@ The configuration file is a simple JSON with the following properties:
 
 <table>
   <tr>
-    <td align="center"><a href="https://www.linkedin.com/in/danilojpferreira/"><img style="border-radius: 50%;" height="auto" width="150px" src="https://avatars.githubusercontent.com/u/43321038?v=4"><br /><p><b>Danilo Pereira</b></p></a><p>Author</p></td>
-    <td align="center"><a href="https://www.linkedin.com/in/leticia-vigna/"><img style="border-radius: 50%;" height="auto" width="150px" src="https://avatars.githubusercontent.com/u/41032355?v=4"><br /><p><b>Letícia Vigna</b></p></a><p>Co-Author</p></td>
+    <td align="center"><a href="https://www.linkedin.com/in/danilojpferreira/"><img style="border-radius: 50%;" height="auto" width="100px" src="https://avatars.githubusercontent.com/u/43321038"><br /><p><b>Danilo Pereira</b></p></a><p>Author</p></td>
+    <td align="center"><a href="https://www.linkedin.com/in/leticia-vigna/"><img style="border-radius: 50%;" height="auto" width="100px" src="https://avatars.githubusercontent.com/u/41032355"><br /><p><b>Letícia Vigna</b></p></a><p>Co-Author</p></td>
   </tr>
 </table>
 
