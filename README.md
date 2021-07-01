@@ -36,6 +36,16 @@ $ npm install @danilo_pereira/pipe-test
 $ yarn add @danilo_pereira/pipe-test
 ```
 
+## Dependencies
+
+Likewise, the `p-iteration` dependency must be installed manually for the project to work.
+
+```
+$ npm install p-iteration
+
+$ yarn add p-iteration
+```
+
 # Usage
 
 After installed, the `pipe-test` command will be available. The command accepts 2 arguments, both of which must be valid JSON files:
