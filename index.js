@@ -25,13 +25,33 @@ const t = async (pipeline, options, pwd) => {
 
   const replacer = async (value) => {
     if (typeof value === "string") {
-      if (value.includes("$global")) {
-        const inx = value.split(".");
-        inx.shift();
-        let createString = "global";
-        inx.forEach((i) => (createString += `['${i}']`));
-        const newValue = await eval(createString);
-        return newValue;
+      const globalString = "$global";
+      if (value.includes(globalString)) {
+        const regex = /\$global.+?(?=\/|$)/g;
+        const matches = value.match(regex);
+        if (matches?.length > 1) {
+          await forEachSeries(matches, async (match) => {
+            const replacerValue = await replacer(match);
+            value = value.replace(match, replacerValue);
+          });
+        } else {
+          let arr = [];
+          let inx = value.split(".");
+          if (inx[0] !== globalString && inx[1].includes("/")) {
+            inx.forEach((val) => {
+              const split = val.split("/");
+              if (val.includes(globalString))
+                arr.push(split.filter((val) => val === globalString)[0]);
+              else arr.push(split[0]);
+            });
+            inx = arr;
+          }
+          inx.shift();
+          let createString = "global";
+          inx.forEach((i) => (createString += `['${i}']`));
+          const newValue = await eval(createString);
+          value = value.replace(matches[0], newValue);
+        }
       }
       return value;
     } else if (Array.isArray(value)) {
@@ -57,18 +77,21 @@ const t = async (pipeline, options, pwd) => {
   };
 
   const mergeConfigs = (globalConfig, requestConfig) => {
-    const merge = { ...globalConfig };
-    if (requestConfig && typeof requestConfig === "object") {
-      Object.entries(requestConfig).forEach(([key, value]) => {
-        if (key in globalConfig) {
-          merge[key] =
-            typeof value === "object" && !Array.isArray(value)
-              ? { ...globalConfig[key], ...value }
-              : value;
-        }
-      });
+    if (globalConfig) {
+      const merge = { ...globalConfig };
+      if (requestConfig && typeof requestConfig === "object") {
+        Object.entries(requestConfig).forEach(([key, value]) => {
+          if (key in globalConfig) {
+            merge[key] =
+              typeof value === "object" && !Array.isArray(value)
+                ? { ...globalConfig[key], ...value }
+                : value;
+          }
+        });
+      }
+      return merge;
     }
-    return merge;
+    return requestConfig;
   };
 
   const stringify = (obj) => {
@@ -189,10 +212,16 @@ const t = async (pipeline, options, pwd) => {
 
         break;
       case stageTypes.CRUD:
+        let path = "";
         let response = null;
         const model = request.type.toLowerCase();
-        const url = `${global.baseUrl ?? ""}${request.path}`;
-        const configuration = mergeConfigs(global.config, request.config);
+        const configuration = mergeConfigs(global?.config, request?.config);
+
+        // Replace path with global values
+        if (request.path) {
+          path = await replacer(request.path);
+        }
+        const url = `${global?.baseUrl ?? ""}${path}`;
 
         // Replace config with global values
         const config = {};
