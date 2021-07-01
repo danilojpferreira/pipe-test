@@ -138,7 +138,9 @@ In order to access these values in the pipeline, you must use `$global.<property
 ]
 ```
 
-### 📌 Example
+### 📌 Pipeline example
+Another example can also be found in the [example folder](./example) of the project.
+
 ```javascript
 [
   {
