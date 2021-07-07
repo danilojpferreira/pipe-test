@@ -1,6 +1,6 @@
 {
   "name": "@danilo_pereira/pipe-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "bin": {
     "pipe-test": "./bin/global.js"

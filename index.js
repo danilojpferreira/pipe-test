@@ -328,6 +328,9 @@ const t = async (pipeline, options, pwd) => {
     if (!stopFlag) {
       await runStage(stage, index);
       sleep(options.delay);
+    } else {
+      process.stdout.write(false);
+      process.exit(1)
     }
   });
 
@@ -348,6 +351,7 @@ const t = async (pipeline, options, pwd) => {
   );
   console.info(`Log file written in ${resolve(logPath)}`);
   console.info(`Result file written in ${resolve(resultPath)}`);
+  if (!stopFlag) process.stdout.write(true);
 };
 
 module.exports.test = t;
